@@ -1,0 +1,39 @@
+version: '3'
+services:
+  cloitdb:
+    image: postgres
+    container_name: cloitdb
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+    ports:
+      - '5432:5432'
+    volumes:
+      - cloit_postgres_data:/var/lib/postgresql/data
+  cloitadmindbweb:
+    image: dpage/pgadmin4
+    container_name: dbadmincloitweb
+    env_file:
+      - .env
+    ports:
+      - '5050:80'
+    depends_on:
+      - cloitdb
+  cloitapp:
+    build:
+      context: ./
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - '5000:5000'
+    depends_on:
+      - cloitdb
+    env_file: .env
+    volumes:
+      - ./:/app
+    command: >
+      /bin/sh -c "npx prisma migrate dev --name init && npm run start:dev"
+
+volumes:
+  cloit_postgres_data:
